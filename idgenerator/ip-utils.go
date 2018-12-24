@@ -38,7 +38,7 @@ func GetHostIp() string {
 				if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 					if ipnet.IP.To4() != nil {
 						fmt.Println(ipnet.IP.String())
-						ip = string(ipnet.IP)
+						ip = ipnet.IP.String()
 					}
 				}
 			}

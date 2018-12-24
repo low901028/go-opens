@@ -20,7 +20,7 @@ type BasePopular struct {
 
 func (bp BasePopular) populateId(timer Timer, id Id, idMeta IdMeta) {
 	var timestamp int64 = timer.genTime()
-	timer.validTimestamp(bp.lastTimestamp, timestamp)
+	timer.validateTimestamp1(bp.lastTimestamp, timestamp)
 
 	if timestamp == bp.lastTimestamp {
 		bp.sequence++

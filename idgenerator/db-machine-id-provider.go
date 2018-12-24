@@ -17,10 +17,12 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/prometheus/common/log"
+	"log"
+	"sync"
 )
 
 type DbWorker struct {
+	sync.Mutex
 	Dsn string
 	Db  *sql.DB
 }
@@ -54,8 +56,7 @@ func (did DbMachineIdProvider) init() {
 
 	id = did.db.queryData(`select ID from DB_MACHINE_ID_PROVIDER where IP = ?`, ip)
 	if id == 0 {
-		msg := fmt.Sprintf("Fail to get ID from DB for host IP address {} after allocation. Stop to initialize the DbMachineIdProvider provider.",
-			ip)
+		msg := fmt.Sprintf("Fail to get ID from DB for host IP address %v after allocation. Stop to initialize the DbMachineIdProvider provider.", ip)
 
 		log.Fatal(msg)
 	}
@@ -72,12 +73,12 @@ func (did DbMachineIdProvider) setMachineId(machineId int64) {
 }
 
 // =======================================mysql operation=================================
-func (dbw *DbWorker) queryData(sql string, paraments ...interface{}) int64 {
+func (dbw DbWorker) queryData(sql string, parament string) int64 {
 	// 1、statement
 	stmt, _ := dbw.Db.Prepare(sql)
 	defer stmt.Close()
 
-	rows, err := stmt.Query(paraments)
+	rows, err := stmt.Query(parament)
 	defer rows.Close()
 	if err != nil {
 		log.Fatal("query data error: %v\n", err)
@@ -85,7 +86,7 @@ func (dbw *DbWorker) queryData(sql string, paraments ...interface{}) int64 {
 	}
 	var ip int64
 	for rows.Next() {
-		rows.Scan(ip)
+		rows.Scan(&ip)
 	}
 
 	err = rows.Err()
@@ -95,26 +96,27 @@ func (dbw *DbWorker) queryData(sql string, paraments ...interface{}) int64 {
 	return ip
 }
 
-func (dbw *DbWorker) update(sql string, paraments ...interface{}) int64 {
+func (dbw DbWorker) update(sql string, parament string) int64 {
+	dbw.Db.Begin()
 	stmt, _ := dbw.Db.Prepare(sql)
 	defer stmt.Close()
 
-	res, err := stmt.Exec(paraments)
+	res, err := stmt.Exec(parament)
 	if err != nil {
-		log.Errorf("update data error: %v\n", err)
+		log.Printf("update data error: %v\n", err)
 		return 0
 	}
 	count, _ := res.RowsAffected()
 	return count
 }
 
-func (dbw *DbWorker) insertData(sql string, paraments ...interface{}) {
+func (dbw DbWorker) insertData(sql string, parament string) {
 	stmt, _ := dbw.Db.Prepare(sql)
 	defer stmt.Close()
 
-	_, err := stmt.Exec(paraments)
+	_, err := stmt.Exec(parament)
 	if err != nil {
-		log.Errorf("insert data error: %v\n", err)
+		log.Printf("insert data error: %v\n", err)
 		return
 	}
 }

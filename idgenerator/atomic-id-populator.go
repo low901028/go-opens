@@ -69,7 +69,7 @@ func (idPopulator AtomicIdPopulator) populateId(timer Timer, id Id, idMeta IdMet
 		varNew.sequence = sequence
 		varNew.lastTimestamp = timestamp
 
-		if atomic.CompareAndSwapPointer(&aRef.variant, &varOld, &varNew) {
+		if atomic.CompareAndSwapPointer(&aRef.variant, unsafe.Pointer(&varOld), unsafe.Pointer(&varNew)) {
 			id.setSeq(sequence)
 			id.setTime(timestamp)
 			break

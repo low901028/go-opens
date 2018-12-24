@@ -73,8 +73,8 @@ func (mid MachineIdsIdServiceImpl) resetIdPopulator() {
 	if reflect.TypeOf(mid.idPopulator).Name() == "ResetPopulator" {
 		(RestPopulator(mid.idPopulator.(RestPopulator))).reset()
 	} else {
-		var newIdPopulator = reflect.New(reflect.TypeOf(mid.idPopulator))
-		mid.idPopulator = new(newIdPopulator.Type())
+		var newIdPopulator = reflect.New(reflect.TypeOf(mid.idPopulator)).Elem().Interface()
+		mid.idPopulator = newIdPopulator.(IdPopulator)
 	}
 }
 
@@ -100,7 +100,8 @@ func (mid MachineIdsIdServiceImpl) initStoreFile() {
 					value, _ := strconv.ParseInt(kvs[1], 10, 64)
 					mid.machineIdMap[key] = int64(value)
 				} else {
-					log.Fatal(filepath.Abs(mid.storeFilePath), " has illegal value <["+line+"]>")
+					path, err := filepath.Abs(mid.storeFilePath)
+					log.Fatalf("%v%v", path, err, " has illegal value <["+line+"]>")
 				}
 			}
 		}

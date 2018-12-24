@@ -18,20 +18,21 @@ import "os"
 var (
 	SWITCH_ON_EXP  = []string{"ON", "TRUE", "on", "true"}
 	SWITCH_OFF_EXP = []string{"OFF", "FALSE", "off", "false"}
-	)
+)
 
-func IsOn(swtch string) bool{
-	for _, sw := range SWITCH_ON_EXP{
-		if(sw == swtch){
+func IsOn(swtch string) bool {
+	for _, sw := range SWITCH_ON_EXP {
+		if sw == swtch {
 			return true
 		}
 	}
-	return false;
+	return false
 }
 
-func isPropKeyOn(key string) bool{
-	for _, sw := range SWITCH_ON_EXP{
-		if key == sw{
+func isPropKeyOn(key string) bool {
+	v := os.Getenv(key)
+	for _, sw := range SWITCH_ON_EXP {
+		if v == sw {
 			return true
 		}
 	}
